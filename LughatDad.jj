@@ -1,0 +1,439 @@
+options {
+    STATIC = true;
+    UNICODE_INPUT = true;
+}
+
+PARSER_BEGIN(LughatDad)
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LughatDad {
+    // جدول الرموز لتخزين المتغيرات
+    static HashMap<String, Object> symbolTable = new HashMap<String, Object>();
+
+    public static void main(String args[]) {
+        try {
+            System.setOut(new java.io.PrintStream(System.out, true, "UTF-8"));
+            System.setErr(new java.io.PrintStream(System.err, true, "UTF-8"));
+        } catch (Exception ex) {}
+
+        if (args.length == 0) {
+            LughatDad parser = new LughatDad(System.in, "UTF-8");
+            while (true) {
+                System.out.println("Reading from standard input...");
+                System.out.print("Enter code: ");
+                try {
+                    switch (LughatDad.one_line()) {
+                        case 0 : 
+                            System.out.println("OK.");
+                            break;
+                        case 1 : 
+                            System.out.println("Goodbye.");
+                            return;
+                        default : 
+                            break;
+                    }
+                } catch (Exception e) {
+                    System.out.println("NOK.");
+                    System.out.println(e.getMessage());
+                    LughatDad.ReInit(System.in, "UTF-8");
+                } catch (Error e) {
+                    System.out.println("Oops.");
+                    System.out.println(e.getMessage());
+                    break;
+                }
+            }
+        } else {
+            try {
+                LughatDad parser = new LughatDad(new java.io.FileInputStream(args[0]), "UTF-8");
+                while (true) {
+                    if (LughatDad.one_line() == 1) {
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            } catch (Error e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    // القاعدة الأساسية للعقد في شجرة التحليل المجردة (AST)
+    static abstract class Node {
+        abstract Object execute();
+    }
+
+    // عقدة للكتل البرمجية (Blocks)
+    static class BlockNode extends Node {
+        List<Node> statements = new ArrayList<Node>();
+        void addStatement(Node stmt) { statements.add(stmt); }
+        Object execute() {
+            for (Node stmt : statements) {
+                stmt.execute();
+            }
+            return null;
+        }
+    }
+
+    // عقدة لتعريف وتعيين المتغيرات
+    static class AssignNode extends Node {
+        String varName;
+        Node expr;
+        boolean isDecl;
+        AssignNode(String v, Node e, boolean decl) { varName = v; expr = e; isDecl = decl; }
+        Object execute() {
+            if (!isDecl && !symbolTable.containsKey(varName)) {
+                throw new RuntimeException("خطأ: المتغير غير معرف مسبقاً -> " + varName);
+            }
+            Object val = expr.execute();
+            symbolTable.put(varName, val);
+            return val;
+        }
+    }
+
+    // عقدة للطباعة
+    static class PrintNode extends Node {
+        Node expr;
+        PrintNode(Node e) { expr = e; }
+        Object execute() {
+            Object val = expr.execute();
+            if (val instanceof Double) {
+                double d = (Double) val;
+                if (d == (long) d) {
+                    System.out.println((long) d);
+                } else {
+                    System.out.println(d);
+                }
+            } else {
+                System.out.println(val);
+            }
+            return null;
+        }
+    }
+
+    // عقدة للجملة الشرطية
+    static class IfNode extends Node {
+        Node condition;
+        Node thenBlock;
+        Node elseBlock;
+        IfNode(Node c, Node t, Node e) { condition = c; thenBlock = t; elseBlock = e; }
+        Object execute() {
+            Object cond = condition.execute();
+            if (!(cond instanceof Boolean)) {
+                throw new RuntimeException("خطأ: يجب أن يكون الشرط منطقياً (Boolean)");
+            }
+            if ((Boolean) cond) {
+                return thenBlock.execute();
+            } else if (elseBlock != null) {
+                return elseBlock.execute();
+            }
+            return null;
+        }
+    }
+
+    // عقدة لحلقة بينما التكرارية
+    static class WhileNode extends Node {
+        Node condition;
+        Node body;
+        WhileNode(Node c, Node b) { condition = c; body = b; }
+        Object execute() {
+            while (true) {
+                Object cond = condition.execute();
+                if (!(cond instanceof Boolean)) {
+                    throw new RuntimeException("خطأ: يجب أن يكون الشرط منطقياً (Boolean)");
+                }
+                if ((Boolean) cond) {
+                    body.execute();
+                } else {
+                    break;
+                }
+            }
+            return null;
+        }
+    }
+
+    // عقدة للعمليات الحسابية والمنطقية
+    static class BinOpNode extends Node {
+        Node left, right;
+        String op;
+        BinOpNode(Node l, String o, Node r) { left = l; op = o; right = r; }
+        Object execute() {
+            Object lVal = left.execute();
+            Object rVal = right.execute();
+
+            // دمج النصوص
+            if (op.equals("+")) {
+                if (lVal instanceof String || rVal instanceof String) {
+                    String s1 = lVal.toString();
+                    String s2 = rVal.toString();
+                    if (lVal instanceof Double && (Double)lVal == ((Double)lVal).longValue()) s1 = String.valueOf(((Double)lVal).longValue());
+                    if (rVal instanceof Double && (Double)rVal == ((Double)rVal).longValue()) s2 = String.valueOf(((Double)rVal).longValue());
+                    return s1 + s2;
+                }
+            }
+
+            // العمليات الحسابية
+            if (lVal instanceof Double && rVal instanceof Double) {
+                double l = (Double) lVal;
+                double r = (Double) rVal;
+                if (op.equals("+")) return l + r;
+                if (op.equals("-")) return l - r;
+                if (op.equals("*")) return l * r;
+                if (op.equals("/")) return l / r;
+                if (op.equals("^")) return Math.pow(l, r);
+                if (op.equals(">")) return l > r;
+                if (op.equals("<")) return l < r;
+                if (op.equals(">=")) return l >= r;
+                if (op.equals("<=")) return l <= r;
+                if (op.equals("==")) return l == r;
+                if (op.equals("!=")) return l != r;
+            }
+
+            // العمليات المنطقية
+            if (lVal instanceof Boolean && rVal instanceof Boolean) {
+                boolean l = (Boolean) lVal;
+                boolean r = (Boolean) rVal;
+                if (op.equals("==")) return l == r;
+                if (op.equals("!=")) return l != r;
+            }
+            
+            // مقارنة النصوص
+            if (lVal instanceof String && rVal instanceof String) {
+                if (op.equals("==")) return lVal.equals(rVal);
+                if (op.equals("!=")) return !lVal.equals(rVal);
+            }
+
+            throw new RuntimeException("خطأ في تنفيذ العملية: " + lVal + " " + op + " " + rVal);
+        }
+    }
+
+    // عقدة للقيم المباشرة (Literals)
+    static class LiteralNode extends Node {
+        Object value;
+        LiteralNode(Object v) { value = v; }
+        Object execute() { return value; }
+    }
+
+    // عقدة للوصول لمتغير
+    static class VarAccessNode extends Node {
+        String varName;
+        VarAccessNode(String v) { varName = v; }
+        Object execute() {
+            if (!symbolTable.containsKey(varName)) {
+                throw new RuntimeException("خطأ: المتغير غير معرف مسبقاً -> " + varName);
+            }
+            return symbolTable.get(varName);
+        }
+    }
+}
+PARSER_END(LughatDad)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+| < "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")? >
+}
+
+TOKEN : /* KEYWORDS */
+{
+  < VAR: "متغير" >
+| < PRINT: "اطبع" >
+| < IF: "إذا" >
+| < ELSE: "وإلا" >
+| < WHILE: "بينما" >
+| < TRUE: "صح" >
+| < FALSE: "خطأ" >
+}
+
+TOKEN : /* IDENTIFIERS & LITERALS */
+{
+  < ID: ["\u0621"-"\u065A"] (["\u0621"-"\u065A"] | ["0"-"9"])* >
+| < NUMBER: (["0"-"9"])+ ("." (["0"-"9"])+)? >
+| < STRING_LITERAL: "\"" (~["\""])* "\"" >
+}
+
+TOKEN : /* OPERATORS & PUNCTUATION */
+{
+  < PLUS: "+" >
+| < MINUS: "-" >
+| < MULT: "*" >
+| < DIV: "/" >
+| < POWER : "^" >
+| < GT: ">" >
+| < LT: "<" >
+| < EQ: "==" >
+| < NEQ: "!=" >
+| < GTE: ">=" >
+| < LTE: "<=" >
+| < ASSIGN: "=" >
+| < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < SEMI: ";" | "\u061b" >
+}
+
+int one_line() :
+{ Node n = null; }
+{
+  n=Statement() 
+  {
+    if (n != null) n.execute();
+    return 0;
+  }
+| <EOF>
+  {
+    return 1;
+  }
+}
+
+Node Statement() :
+{ Node n = null; }
+{
+  (
+      n=Declaration()
+    | n=Assignment()
+    | n=PrintStmt()
+    | n=IfStmt()
+    | n=WhileStmt()
+    | n=Block()
+  )
+  { return n; }
+}
+
+Node Block() :
+{
+    BlockNode block = new BlockNode();
+    Node stmt;
+}
+{
+    <LBRACE> ( stmt = Statement() { block.addStatement(stmt); } )* <RBRACE>
+    { return block; }
+}
+
+Node Declaration() :
+{
+    Token t;
+    Node expr;
+}
+{
+    <VAR> t=<ID> <ASSIGN> expr=Expression() (<SEMI>)?
+    { return new AssignNode(t.image, expr, true); }
+}
+
+Node Assignment() :
+{
+    Token t;
+    Node expr;
+}
+{
+    t=<ID> <ASSIGN> expr=Expression() (<SEMI>)?
+    { return new AssignNode(t.image, expr, false); }
+}
+
+Node PrintStmt() :
+{
+    Node expr;
+}
+{
+    <PRINT> <LPAREN> expr=Expression() <RPAREN> (<SEMI>)?
+    { return new PrintNode(expr); }
+}
+
+Node IfStmt() :
+{
+    Node cond, thenStmt, elseStmt = null;
+}
+{
+    <IF> <LPAREN> cond=Expression() <RPAREN> thenStmt=Statement()
+    ( LOOKAHEAD(1) <ELSE> elseStmt=Statement() )?
+    { return new IfNode(cond, thenStmt, elseStmt); }
+}
+
+Node WhileStmt() :
+{
+    Node cond, body;
+}
+{
+    <WHILE> <LPAREN> cond=Expression() <RPAREN> body=Statement()
+    { return new WhileNode(cond, body); }
+}
+
+Node Expression() :
+{ Node n; }
+{
+    n = EqualityExpr() { return n; }
+}
+
+Node EqualityExpr() :
+{ Node n, r; Token op; }
+{
+    n=RelationalExpr() (
+        ( op=<EQ> | op=<NEQ> ) r=RelationalExpr()
+        { n = new BinOpNode(n, op.image, r); }
+    )*
+    { return n; }
+}
+
+Node RelationalExpr() :
+{ Node n, r; Token op; }
+{
+    n=sum() (
+        ( op=<GT> | op=<LT> | op=<GTE> | op=<LTE> ) r=sum()
+        { n = new BinOpNode(n, op.image, r); }
+    )?
+    { return n; }
+}
+
+Node sum() :
+{ Node n, r; Token op; }
+{
+    n=term() (
+        ( op=<PLUS> | op=<MINUS> ) r=term()
+        { n = new BinOpNode(n, op.image, r); }
+    )*
+    { return n; }
+}
+
+Node term() :
+{ Node n, r; Token op; }
+{
+    n=power() (
+        ( op=<MULT> | op=<DIV> ) r=power()
+        { n = new BinOpNode(n, op.image, r); }
+    )*
+    { return n; }
+}
+
+Node power() :
+{ Node n, r; Token op; }
+{
+    n=unary() (
+        ( op=<POWER> ) r=power()
+        { n = new BinOpNode(n, op.image, r); }
+    )?
+    { return n; }
+}
+
+Node unary() :
+{ Node n; Token op; }
+{
+    op=<MINUS> n=element() { return new BinOpNode(new LiteralNode(0.0), "-", n); }
+  | n=element() { return n; }
+}
+
+Node element() :
+{ Token t; Node n; }
+{
+    t=<NUMBER> { return new LiteralNode(Double.parseDouble(t.image)); }
+  | t=<STRING_LITERAL> { return new LiteralNode(t.image.substring(1, t.image.length() - 1)); }
+  | <TRUE> { return new LiteralNode(true); }
+  | <FALSE> { return new LiteralNode(false); }
+  | t=<ID> { return new VarAccessNode(t.image); }
+  | <LPAREN> n=Expression() <RPAREN> { return n; }
+}
