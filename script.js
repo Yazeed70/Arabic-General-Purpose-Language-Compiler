@@ -5,20 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-btn');
 
     // Default creative code example
-    codeEditor.value = `متغير الرصيد = 1000;
-متغير الهدف = 1500;
-متغير الشهر = 1;
+    codeEditor.value = `متغير العمر = 20؛
 
-اطبع("--- حساب التوفير المتقدم ---");
-بينما (الرصيد < الهدف) {
-    الرصيد = الرصيد + 150;
-    الشهر = الشهر + 1;
-}
+اطبع("--- الاختبار الثاني: المنطق الشرطي ---")؛
+اطبع("العمر هو:")؛
+اطبع(العمر)؛
 
-اطبع("عدد الأشهر المستغرقة:");
-اطبع(الشهر - 1);
-اطبع("الرصيد النهائي أصبح:");
-اطبع(الرصيد);`;
+إذا (العمر >= 18) {
+    اطبع("مسموح لك بالدخول")؛
+} وإلا {
+    اطبع("غير مسموح لك بالدخول")؛
+}`;
 
     runBtn.addEventListener('click', async () => {
         const code = codeEditor.value.trim();
