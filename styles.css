@@ -171,8 +171,8 @@ textarea {
     font-size: 1.1rem;
     line-height: 1.7;
     outline: none;
-    direction: rtl; 
-    text-align: right;
+    direction: rtl;
+    text-align: right; 
     transition: all 0.3s ease;
 }
 
@@ -196,9 +196,8 @@ pre {
     color: #34d399; /* Emerald */
     line-height: 1.7;
     white-space: pre-wrap;
-    unicode-bidi: plaintext;
-    text-align: start;
     direction: rtl; 
+    text-align: right; 
 }
 
 .error-text {
