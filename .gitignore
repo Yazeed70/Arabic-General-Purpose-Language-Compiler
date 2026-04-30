@@ -1,2 +1,10 @@
 *.class
 javacc.jar
+README.txt
+LughatDad.java
+LughatDadConstants.java
+LughatDadTokenManager.java
+ParseException.java
+SimpleCharStream.java
+Token.java
+TokenMgrError.java
