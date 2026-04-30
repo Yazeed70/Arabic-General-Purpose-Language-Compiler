@@ -64,14 +64,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             response = {'output': output}
             self.wfile.write(json.dumps(response).encode('utf-8'))
 
-def run(server_class=HTTPServer, handler_class=RequestHandler, port=8000):
+# أضفنا استدعاء للمنفذ من السيرفر السحابي
+def run(server_class=HTTPServer, handler_class=RequestHandler):
+    # السطر التالي هو التعديل الأهم: قراءة المنفذ من السيرفر السحابي أو استخدام 8000 محلياً
+    port = int(os.environ.get('PORT', 8000)) 
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print("="*50)
-    print(f" Server is running successfully at:")
-    print(f" http://localhost:{port}")
+    print(f" Server is running successfully at port: {port}")
     print("="*50)
-    print("Press Ctrl+C to stop the server")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
