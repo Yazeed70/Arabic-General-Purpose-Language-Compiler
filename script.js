@@ -35,7 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         try {
-            const response = await fetch('/run', {
+            // استبدل الرابط أدناه بالرابط المباشر الخاص بك
+            const response = await fetch('https://yaz7eed7-lughatdad-compiler.hf.space/run', {
+            // const response = await fetch('/run', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
