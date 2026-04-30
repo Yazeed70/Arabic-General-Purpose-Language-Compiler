@@ -1,115 +1,86 @@
-===============================
-🧠 LughatDad (لغة ضاد)
-===============================
-Arabic General-Purpose Programming Language Compiler
+# 📝 LughatDad Compiler (Arabic Programming Language)
 
+Welcome to the official repository of the **LughatDad** project; a general-purpose Arabic programming language with its own custom compiler built using **JavaCC**. This project allows users to write, compile, and execute Arabic source code in real-time through an interactive web interface.
 
-===============================
-📝 Project Overview
-===============================
-LughatDad (لغة الضاد) is an original general-purpose programming language designed to be written entirely in Arabic script.
+---
 
-This project implements a Tree-Walking Interpreter using JavaCC, enabling real-time parsing and execution of Arabic source code.
+## 🚀 Recent Updates (System Architecture)
 
-The language provides a complete programming environment where:
+The project has recently been upgraded to follow an industry-standard decoupled architecture, ensuring fast performance and making the compiler freely accessible online:
 
-All keywords, identifiers, and outputs are in Arabic (Unicode)
-The architecture is based on an Abstract Syntax Tree (AST)
-Clear separation between syntax analysis and semantic evaluation
-Supports advanced control flow such as:
-Nested loops
-Conditional branching
+* **Frontend:** 
+  * Built using `HTML`, `CSS`, and `Vanilla JavaScript`.
+  * Hosted on **[GitHub Pages]** to provide fast access and a stable, interactive user interface.
+* **Backend & Compiler:** 
+  * The core compiler is built in **Java** using the **JavaCC** parser generator.
+  * Wrapped in a lightweight **Python** server that handles code execution via a RESTful API.
+  * Fully containerized using **Docker** and hosted on **Hugging Face Spaces** as a cloud server running on port `7860`.
 
-===============================
-🚀 Prerequisites
-===============================
-Make sure you have the following installed:
+---
 
-☕ Java Development Kit (JDK 8 or higher)
-Required for compiling and running the interpreter
-🐍 Python (3.x) (Optional)
-Only needed for the web interface
-⚙️ JavaCC (Java Compiler Compiler) (Optional)
-Required if you want to modify the .jj grammar file
+## ✨ Features
 
-===============================
-🛠️ How to Run
-===============================
-▶️ Option 1: Automated Script (Windows)
-Navigate to the project folder
-Double-click: run_web.bat
+* **Arabic Syntax:** Full support for variables, loops (`بينما` / while), conditional statements (`إذا` / if), and print operations written entirely in Arabic.
+* **Cloud Execution:** Code is sent from the browser to the Hugging Face server, compiled and executed in a Java environment, and results (or errors) are returned to the user instantly.
+* **Isolated & Secure:** Code is executed in temporary files that are immediately deleted after the output is returned.
 
-The script will:
+---
 
-Generate the parser
-Compile Java files with UTF-8 encoding
-Start the local server
+## ⚙️ How It Works?
 
-Then open your browser:
+When a user clicks "Run Code" on the web interface:
+1. `JavaScript` captures the input text and sends a `POST` request to the Python server (Hugging Face API).
+2. The `Python` server creates a temporary text file containing the LughatDad source code.
+3. The `Java` compiler is invoked via a `subprocess` command, passing the temporary file as an argument.
+4. The compiler reads, parses (Lexical & Syntax Analysis), and executes the code.
+5. The `Python` server returns the standard output (or error messages) formatted as a `JSON` response back to the frontend.
 
-http://localhost:8000
+---
 
-===============================
-💻 Option 2: Manual Command Line (CLI)
-===============================
-1. Generate Parser
-javacc LughatDad.jj
-2. Compile Files
-javac -encoding UTF-8 *.java
-3. Run with UTF-8 Support
-Run a file:
-java -Dfile.encoding=UTF-8 LughatDad source_file.dad
-Interactive mode:
-java -Dfile.encoding=UTF-8 LughatDad
+## 💻 Local Execution
 
-===============================
-🧩 Option 3: Using IDE (e.g., Eclipse)
-===============================
-Setup:
-Create a new Java Project
-Import all .java files + .jj file
-Encoding Configuration:
-Right-click project → Properties → Resource
-Set encoding to: UTF-8
-Run Configuration:
-Go to: Run → Run Configurations
-Select your application
-Add VM argument:
--Dfile.encoding=UTF-8
+If you want to modify the compiler or run it locally on your machine:
 
-(Optional)
+### Prerequisites:
+* **Java (JDK)**
+* **Python 3**
+* **JavaCC** (Downloaded automatically by the build script)
 
-Ensure Console encoding is also UTF-8
-▶️ Run:
-You can now type LughatDad code directly in the console
+### Steps to Run:
 
-===============================
-💻 Language Features
-===============================
-🧾 Variables
-باستخدام: متغير
-🖨️ Output
-باستخدام: اطبع(...)
-🔁 Control Flow
-إذا (if)
-وإلا (else)
-بينما (while)
-➗ Mathematics
-+, -, *, /, ^
-مع احترام أولوية العمليات
-🔤 Data Types
-Numbers (Double)
-Boolean (صح / خطأ)
-Strings
-Dynamic typing
+**Step 1: Clone the repository and navigate into it**
+```bash
+git clone https://github.com/Yazeed70/Arabic-General-Purpose-Language-Compiler.git
+cd Arabic-General-Purpose-Language-Compiler
+```
 
-===============================
-📂 Project Structure
-===============================
-LughatDad.jj        → JavaCC grammar
-index.html          → Web interface
-styles.css          → Styling
-script.js           → Frontend logic
-server.py           → Python bridge
-SymbolTable         → HashMap<String, Object>
+**Step 2: Build the compiler and start the local server**
+```cmd
+run_web.bat
+```
 
+**Step 3: Open your browser and navigate to**
+`http://localhost:8000`
+
+---
+
+## 🐳 Running with Docker
+
+If you have Docker installed, you can build and spin up the entire project environment easily:
+
+```bash
+docker build -t lughatdad-compiler .
+docker run -p 8000:7860 lughatdad-compiler
+```
+
+---
+
+## 🛠️ Technologies Used
+* **Lexer & Parser:** JavaCC
+* **Backend:** Python (BaseHTTPRequestHandler)
+* **Frontend:** Vanilla JS, HTML, CSS
+* **Containerization:** Docker
+* **Hosting:** GitHub Pages (Frontend) | Hugging Face Spaces (Backend)
+
+---
+*This project was developed as part of the practical coursework for the Compilers course.*
