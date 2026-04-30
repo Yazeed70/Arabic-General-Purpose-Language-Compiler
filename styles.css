@@ -209,7 +209,7 @@ pre {
     }
     textarea, pre {
         height: 350px;
-        direction: ltr;
+        direction: rtl;
         text-align: right;
     }
 }
